@@ -1,0 +1,27 @@
+dataset:
+  path: ""
+  batch_size: 2
+  concurrency: 2
+  image_size: 224
+  # classes: if not None, bound the number of classes based on the value (int to choose classes with the highest occurrences, or list with the explicit names)
+  classes: 20
+  augmentations:
+    resize: 224
+    normalize: True
+  keep_square: False
+
+model:
+  type: base
+  backbone: resnet50
+  fc_dims: [1000, 100]
+
+trainer:
+  s3:
+    path: ""
+    sync_freq: 1000
+  optim:
+    lr:
+      base: 7.e-4
+      backbone: 1.e-5  # can be None to work with base lr only
+    schedule: [200000, 400000]
+  max_epochs: 200

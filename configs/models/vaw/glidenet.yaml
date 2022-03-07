@@ -1,0 +1,263 @@
+dataset:
+  type: VAW
+  path: ""
+  batch_size: 8
+  concurrency: 2
+  # classes: if not None, bound the number of classes based on the value (int to choose classes with the highest occurrences, or list with the explicit names)
+  classes: ~
+  filter_small_instances_threshold: 0.05
+  n_samples: ~
+  attempt_local_path: ""
+  augmentations:
+    resize: 224
+    normalize: True
+  keep_square: False
+  scale: 28  # used to generate the instances matrix
+
+model:
+  pretrained_state_dict: ~
+  type: Glidenet
+  backbone: resnet50
+  squeeze: 256
+  descriptor:
+    category_fc:
+      - in_channels: 2053
+        out_channels: 512
+        bias: True
+        norm: False
+        activation: relu
+      - in_channels: 512
+        out_channels: 32
+        bias: True
+        norm: False
+        activation: softmax
+
+    mask_convs:
+      - in_channels: 1
+        out_channels: 16
+        kernel_size: 3
+        padding: 1
+        stride: 2
+        activation: relu
+        norm: True
+        bias: True
+        groups: 1
+      - in_channels: 16
+        out_channels: 32
+        kernel_size: 3
+        padding: 1
+        stride: 2
+        activation: relu
+        norm: True
+        bias: True
+        groups: 1
+
+    post_convs:
+      - in_channels: 32
+        out_channels: 64
+        kernel_size: 3
+        padding: 1
+        stride: 1
+        activation: relu
+        norm: True
+        bias: True
+        groups: 1
+        upsample:
+          type: nearest
+          scale_factor: 2
+      - in_channels: 64
+        out_channels: 128
+        kernel_size: 3
+        padding: 1
+        stride: 1
+        activation: sigmoid
+        norm: True
+        bias: True
+        groups: 1
+        upsample:
+          type: nearest
+          scale_factor: 2
+
+  classifier:
+    - in_channels: 768
+      out_channels: 512
+      bias: True
+      norm: False
+      activation: relu
+    - in_channels: 512
+      out_channels: 256
+      bias: True
+      norm: False
+      activation: softmax
+
+  interpreter:  # it can either be of type MultiheadConfig or ProjectionConfig
+    n_classes: 2053
+    fc_config:
+      - in_channels: 256
+        out_channels: 128
+        bias: True
+        norm: False
+        activation: relu
+      - in_channels: 128
+        out_channels: 620
+        bias: True
+        norm: False
+        activation: ~
+
+  gate:
+    - in_channels: 128
+      out_channels: 64
+      kernel_size: 3
+      padding: 1
+      stride: 2
+      activation: relu
+      norm: False
+      bias: True
+      groups: 1
+    - in_channels: 64
+      out_channels: 3
+      kernel_size: 3
+      padding: 1
+      stride: 2
+      activation: sigmoid
+      norm: False
+      bias: False
+
+  global_decoder:
+    - in_channels: 768
+      out_channels: 512
+      kernel_size: 3
+      padding: 1
+      stride: 1
+      activation: relu
+      norm: True
+      bias: True
+      groups: 1
+    - in_channels: 512
+      out_channels: 256
+      kernel_size: 3
+      padding: 1
+      stride: 1
+      activation: relu
+      norm: True
+      bias: True
+      groups: 1
+    - in_channels: 256
+      out_channels: 2058  # consists of 1 for confidence, 4 for bounding box, and 2053 for n possible categories (using one hot encoder)
+      kernel_size: 1
+      padding: 0
+      stride: 1
+      activation: ~
+      norm: False
+      bias: False
+      groups: 1
+
+  mask_decoder:
+    - in_channels: 768
+      out_channels: 256
+      kernel_size: 3
+      padding: 1
+      stride: 1
+      activation: relu
+      norm: True
+      bias: True
+      groups: 1
+      upsample:
+        type: nearest
+        scale_factor: 2
+    - in_channels: 256
+      out_channels: 128
+      kernel_size: 3
+      padding: 1
+      stride: 1
+      activation: relu
+      norm: True
+      bias: True
+      groups: 1
+      upsample:
+        type: nearest
+        scale_factor: 2
+    - in_channels: 128
+      out_channels: 64
+      kernel_size: 3
+      padding: 1
+      stride: 1
+      activation: ~
+      norm: True
+      bias: True
+      groups: 1
+      upsample:
+        type: nearest
+        scale_factor: 2
+    - in_channels: 64
+      out_channels: 1
+      kernel_size: 1
+      padding: 0
+      stride: 1
+      activation: ~
+      norm: True
+      bias: True
+      groups: 1
+
+  category_embedding:
+#    - in_channels: 768
+#      out_channels: 1024
+#      bias: True
+#      norm: False
+#      activation: relu
+    - in_channels: 768
+      out_channels: 2053
+      bias: True
+      norm: False
+      activation: ~
+
+  local_attributes_decoder:
+#    - in_channels: 768
+#      out_channels: 256
+#      bias: True
+#      norm: True
+#      activation: relu
+    - in_channels: 768
+      out_channels: 620
+      bias: True
+      norm: False
+      activation: ~
+
+  intrinsic_attributes_decoder:
+#    - in_channels: 768
+#      out_channels: 256
+#      bias: True
+#      norm: True
+#      activation: relu
+    - in_channels: 768
+      out_channels: 620
+      bias: True
+      norm: False
+      activation: ~
+
+  losses:
+    weights:
+      global_decoder_confidence: 1
+      global_decoder_position: 0.5
+      global_decoder_dimensions: 0.5
+      global_decoder_category: 0.01
+      local_decoder_mask: 0.1
+      local_decoder_category: 0.01
+      local_decoder_attributes: 1
+      intrinsic_decoder_attributes: 1
+      phase2_attributes: 1
+      phase2_category: 0.01
+
+
+trainer:
+  phases_changes: [15]
+  s3:
+    path: ""
+    sync_freq: 1000
+  optim:
+    lr:
+      base: 4.e-4
+      backbone: ~  # can be None to work with base lr only
+    schedule: [125000, 450000]
+    weight_decay: 1.e-5
+  max_epochs: 25

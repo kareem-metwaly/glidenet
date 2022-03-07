@@ -1,0 +1,31 @@
+dataset:
+  path: ""
+  batch_size: 4
+  concurrency: 2
+  # classes: if not None, bound the number of classes based on the value (int to choose classes with the highest occurrences, or list with the explicit names)
+  classes: ~
+  filter_small_instances_threshold: 0.05
+  n_samples: ~
+  attempt_local_path: /dev/shm/vaw_images/
+  augmentations:
+    resize: 224
+    normalize: True
+  keep_square: False
+
+model:
+  type: base_single_head
+  backbone: resnet50
+  backbone_drop_last: True
+  intermediate: [2048, 200]
+  fc_dims: [200, 50]
+
+trainer:
+  s3:
+    path: ""
+    sync_freq: 1000
+  optim:
+    lr:
+      base: 2.e-3
+      backbone: 2.e-3  # can be None to work with base lr only
+    schedule: [5, 10, 15]
+  max_epochs: 20

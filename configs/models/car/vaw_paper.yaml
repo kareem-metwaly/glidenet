@@ -1,0 +1,43 @@
+dataset:
+  type: CAR
+  path: /app/datasets/cityscapes/
+  s3_path: ""
+  batch_size: 8
+  concurrency: 2
+  n_samples: ~
+  augmentations:
+    resize: 224
+    normalize: True
+  keep_square: False
+  scale: 28  # used to generate the instances matrix
+
+model:
+  type: Vaw_paper
+  is_multi_head: True
+  backbone: resnet50
+  features_dims: [512, 1024, 2048]
+  class_gate_dims: [100, 128, 2048]  # [input, intermediate, output]
+  object_localizer_channels: [2048, 256, 1]  # [input, intermediate, output]
+  multi_attention_channels: [2048, 256, 1]  # [input, intermediate, output]
+  multi_attention_proj_channels: 128
+  n_multi_attention: 3
+  pretrained_state_dict: ~
+  intermediate: ~
+  backbone_drop_last: True  # drop the last FC layer when loading backbone
+  glove_file_path: ""
+  losses:
+    w: 1
+    lambda_div: 0.004
+    lambda_rel: 0.25
+
+trainer:
+  s3:
+    path: ""
+    sync_freq: 1000
+  optim:
+    lr:
+      base: 7.e-4
+      backbone: 1.e-5  # can be None to work with base lr only
+    schedule: [200000, 400000]
+    weight_decay: 1.e-5
+  max_epochs: 12
