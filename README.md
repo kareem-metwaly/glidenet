@@ -14,9 +14,9 @@ Most importantly, [glidenet.py](models/glidenet.py) contains the implemented com
 In addition, [informedconv2d.py](models/informedconv2d.py) contains a PyTorch implementation of the novel Informed Convolution.
 You can also find some examples of modules that are based on Informed Convolution at [informed_resnet.py](models/informed_resnet.py)
 
-2. [configs](configs) contains examples of configuration files that can be used to defing the parameters of GlideNet's architecture. 
+2. [configs](configs) contains examples of configuration files that can be used to define the parameters of GlideNet's architecture. 
 
-3. [dataset](dataset) contains PyTorch implementations to retrieve data samples from [CAR](https://github.com/kareem-metwaly/car-api) and [VAW](https://github.com/adobe-research/vaw_dataset) after being preprocessed.
+3. [dataset](dataset) contains PyTorch implementations to retrieve data samples from [CAR](https://github.com/kareem-metwaly/car-api) and [VAW](https://github.com/adobe-research/vaw_dataset) datasets after being preprocessed.
 
 4. [structures](structures) contains some useful abstract classes and dataclasses that were implemented to ease dealing with inputs and outputs of the models and the datasets.
 
